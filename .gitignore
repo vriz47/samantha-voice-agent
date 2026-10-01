@@ -1,0 +1,34 @@
+# Models and weights are fetched separately, never committed.
+models/
+*.onnx
+*.ort
+*.tar.bz2
+.dl/
+
+# Native build output (rebuild with native/onnx/build.sh)
+native/onnx/build/
+*.so
+
+# Recordings and generated audio (user voice, never commit)
+turn/
+*.wav
+*.m4a
+*.mp3
+*.aac
+*.awb
+*.amr
+*.opus
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Local state
+*.log
+.env
+.env.*
+.DS_Store
