@@ -46,7 +46,12 @@ SYSTEM = (
     "If you do not know something, say so briefly and honestly."
 )
 
-SYSTEM_TTS = SYSTEM + " Speak numbers and acronyms as plain words."
+SYSTEM_TTS = (
+    SYSTEM
+    + " Speak numbers and acronyms as plain words."
+    + " Use commas often so there is a natural pause every few words,"
+    + " and keep each sentence short and easy to say out loud."
+)
 
 
 def sanitize(text: str) -> str:

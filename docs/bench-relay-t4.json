@@ -1,0 +1,136 @@
+{
+  "tts_threads": 4,
+  "rounds": 3,
+  "n": 15,
+  "first_audio_min": 0.8096476559876464,
+  "first_audio_median": 1.0587129689811263,
+  "first_audio_mean": 1.0548748748668004,
+  "first_audio_max": 1.2197540100023616,
+  "first_audio_p90": 1.2181352599873208,
+  "wall_median": 6.232596663990989,
+  "under_700ms": 0,
+  "under_1s": 3,
+  "errors": 0,
+  "rows": [
+    {
+      "round": 0,
+      "q": "Tell me about the sea.",
+      "first_audio_s": 0.8121949479973409,
+      "wall_s": 15.04610067201429,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 0,
+      "q": "What is your favourite season?",
+      "first_audio_s": 0.8096476559876464,
+      "wall_s": 6.232596663990989,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 0,
+      "q": "Say something about the moon.",
+      "first_audio_s": 1.0219085940043442,
+      "wall_s": 5.076448018982774,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 0,
+      "q": "How do you feel when it rains?",
+      "first_audio_s": 1.0615560940059368,
+      "wall_s": 3.936976976983715,
+      "clauses": 4,
+      "errors": []
+    },
+    {
+      "round": 0,
+      "q": "Explain what a rainbow is.",
+      "first_audio_s": 1.1419312490033917,
+      "wall_s": 6.5890633829985745,
+      "clauses": 4,
+      "errors": []
+    },
+    {
+      "round": 1,
+      "q": "Tell me about the sea.",
+      "first_audio_s": 1.0586929690034594,
+      "wall_s": 10.364213745982852,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 1,
+      "q": "What is your favourite season?",
+      "first_audio_s": 1.0587129689811263,
+      "wall_s": 3.8948799990175758,
+      "clauses": 3,
+      "errors": []
+    },
+    {
+      "round": 1,
+      "q": "Say something about the moon.",
+      "first_audio_s": 1.0033127079950646,
+      "wall_s": 11.17373374599265,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 1,
+      "q": "How do you feel when it rains?",
+      "first_audio_s": 1.2181352599873208,
+      "wall_s": 5.1253635399916675,
+      "clauses": 3,
+      "errors": []
+    },
+    {
+      "round": 1,
+      "q": "Explain what a rainbow is.",
+      "first_audio_s": 1.0130155730003025,
+      "wall_s": 6.113078800000949,
+      "clauses": 4,
+      "errors": []
+    },
+    {
+      "round": 2,
+      "q": "Tell me about the sea.",
+      "first_audio_s": 0.9457980210136157,
+      "wall_s": 10.703961246006656,
+      "clauses": 3,
+      "errors": []
+    },
+    {
+      "round": 2,
+      "q": "What is your favourite season?",
+      "first_audio_s": 1.2184214060252998,
+      "wall_s": 4.208480571018299,
+      "clauses": 3,
+      "errors": []
+    },
+    {
+      "round": 2,
+      "q": "Say something about the moon.",
+      "first_audio_s": 1.1292621869943105,
+      "wall_s": 10.385751870984677,
+      "clauses": 2,
+      "errors": []
+    },
+    {
+      "round": 2,
+      "q": "How do you feel when it rains?",
+      "first_audio_s": 1.2197540100023616,
+      "wall_s": 5.261020622972865,
+      "clauses": 3,
+      "errors": []
+    },
+    {
+      "round": 2,
+      "q": "Explain what a rainbow is.",
+      "first_audio_s": 1.1107794790004846,
+      "wall_s": 11.596373954002047,
+      "clauses": 4,
+      "errors": []
+    }
+  ]
+}

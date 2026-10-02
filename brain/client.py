@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import os
 import random
 import threading
 import time
@@ -19,7 +20,7 @@ from queue import Queue
 from typing import Iterator, Sequence
 
 DEFAULT_URL = "http://127.0.0.1:8080"
-DEFAULT_MODEL = "Gemma-4-E2B-it"
+DEFAULT_MODEL = os.environ.get("SAMANTHA_MODEL", "Gemma-4-E2B-it")
 
 
 class BrainBusyError(RuntimeError):
@@ -111,8 +112,8 @@ class BrainClient:
         self,
         messages: Sequence[dict],
         max_tokens: int = 90,
-        temperature: float | None = 0.7,
-        top_p: float | None = 0.95,
+        temperature: float | None = 0.6,
+        top_p: float | None = 0.9,
         cancel: CancelToken | None = None,
     ) -> Iterator[str]:
         """Yield text deltas for one turn.
@@ -171,6 +172,7 @@ class BrainClient:
         result: TurnStats,
         cancel: CancelToken | None,
     ) -> None:
+        payload = json.loads(blob.decode("utf-8"))
         headers = {"Content-Type": "application/json"}
         started = time.time()
         last_error: Exception | None = None
@@ -190,6 +192,8 @@ class BrainClient:
 
                 if resp.status != 200:
                     detail = resp.read()[:200].decode("utf-8", "replace")
+                    if resp.status == 404 and self._adopt_served_model():
+                        blob = json.dumps({**payload, "model": self.model}).encode()
                     last_error = BrainTransportError(f"HTTP {resp.status}: {detail}")
                     self._sleep_backoff(attempt)
                     continue
@@ -226,6 +230,27 @@ class BrainClient:
         if isinstance(last_error, BrainBusyError):
             raise BrainBusyError(f"still busy after {self.max_attempts} attempts") from last_error
         raise last_error or BrainTransportError("unknown failure")
+
+    def _adopt_served_model(self) -> bool:
+        """Point the client at the model the server actually loaded.
+
+        The Gallery app only ever holds one model in its single slot, and switching
+        models in the UI changes it under us. A 404 means our requested model id is gone,
+        so read /v1/models and retry with whatever is live instead of failing the turn.
+        """
+        try:
+            conn = http.client.HTTPConnection(self.host, self.port, timeout=10)
+            conn.request("GET", "/v1/models")
+            resp = conn.getresponse()
+            data = json.loads(resp.read().decode("utf-8", "replace"))
+            conn.close()
+        except (OSError, http.client.HTTPException, ValueError):
+            return False
+        ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
+        if len(ids) == 1 and ids[0] != self.model:
+            self.model = ids[0]
+            return True
+        return False
 
     def _sleep_backoff(self, attempt: int) -> None:
         if attempt >= self.max_attempts:
