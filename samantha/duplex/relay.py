@@ -177,11 +177,15 @@ class RelayTurn:
                     return
                 try:
                     self.tts.speak_streaming(text, player)
-                    if not first_push_at:
-                        first_push_at.append(time.monotonic())
+                    if player.first_audio_at is not None:
+                        first_push_at.append(player.first_audio_at)
                         prof.point(
-                            f"FIRST AUDIO (+{first_push_at[0] - t_start:.3f}s) after clause {text!r}"
+                            f"FIRST AUDIO queued (+{player.first_audio_at - t_start:.3f}s) "
+                            f"after clause {text!r}"
                         )
+                    elif not first_push_at:
+                        first_push_at.append(time.monotonic())
+                        prof.point(f"FIRST AUDIO queued (+{first_push_at[0] - t_start:.3f}s)")
                 except Exception as exc:  # noqa: BLE001
                     error.append(f"tts: {type(exc).__name__}: {exc}")
                     return
@@ -219,12 +223,25 @@ class RelayTurn:
         worker.join(timeout=120)
         prof.point("all clauses synthesised")
 
+        first_drain = (player.first_drain_at - t_start) if player.first_drain_at is not None else None
         if owns_player:
             player.close()
             prof.point("playback drained")
 
         reply = sanitize(" ".join(clauses))
         first_audio = (first_push_at[0] - t_start) if first_push_at else None
+        first_sound = None
+        if first_drain is not None:
+            first_sound = first_drain + player.latency_msec / 1000.0
+            prof.point(f"FIRST SOUND estimate (+{first_sound:.3f}s)")
+        if first_audio is not None and first_sound is not None:
+            log(
+                f"relay latency: queued {first_audio:.3f}s -> sink {first_drain:.3f}s "
+                f"(+{(first_drain - first_audio) * 1000:.0f} ms queue wait) "
+                f"-> speaker ~{first_sound:.3f}s"
+            )
+        elif first_audio is not None:
+            log(f"relay latency: queued {first_audio:.3f}s, playback onset unmeasured")
         self.voice.turns.extend(
             [{"role": "user", "content": heard}, {"role": "assistant", "content": reply}]
         )
@@ -236,6 +253,8 @@ class RelayTurn:
             "reply": reply,
             "clauses": clauses,
             "first_audio_s": first_audio,
+            "first_sound_s": first_sound,
+            "first_drain_s": first_drain,
             "errors": error,
             "total_s": prof.elapsed,
             "prof": prof,

@@ -52,23 +52,27 @@ def main() -> None:
             info = relay.run(q, seconds=5)
             wall = time.monotonic() - t0
             first = info["first_audio_s"]
+            sound = info.get("first_sound_s")
             rows.append(
                 {
                     "round": round_no,
                     "q": q,
                     "first_audio_s": first,
+                    "first_sound_s": sound,
                     "wall_s": wall,
                     "clauses": len(info["clauses"]),
                     "errors": info["errors"],
                 }
             )
             shown = f"{first:.3f}s" if first is not None else "TIDAK ADA"
+            at_speaker = f"{sound:.3f}s" if sound is not None else "n/a"
             log(
-                f"r{round_no} {q[:34]!r} first={shown} "
+                f"r{round_no} {q[:34]!r} first={shown} speaker={at_speaker} "
                 f"wall={wall:.2f}s clauses={len(info['clauses'])} err={info['errors'] or 'none'}"
             )
 
     first = [r["first_audio_s"] for r in rows if r["first_audio_s"]]
+    sound = [r["first_sound_s"] for r in rows if r.get("first_sound_s")]
     walls = [r["wall_s"] for r in rows]
     errors = [r for r in rows if r["errors"]]
     summary = {
@@ -83,6 +87,9 @@ def main() -> None:
         "wall_median": statistics.median(walls),
         "under_700ms": sum(1 for f in first if f < 0.7),
         "under_1s": sum(1 for f in first if f < 1.0),
+        "speaker_median": statistics.median(sound) if sound else None,
+        "speaker_min": min(sound) if sound else None,
+        "speaker_max": max(sound) if sound else None,
         "errors": len(errors),
         "rows": rows,
     }
@@ -92,6 +99,12 @@ def main() -> None:
         f"{summary['first_audio_median']:.3f}s | mean {summary['first_audio_mean']:.3f}s | "
         f"max {summary['first_audio_max']:.3f}s"
     )
+    if summary["speaker_median"] is not None:
+        log(
+            f"speaker onset: min {summary['speaker_min']:.3f}s | median "
+            f"{summary['speaker_median']:.3f}s | max {summary['speaker_max']:.3f}s "
+            f"(termasuk latency_msec sink)"
+        )
     log(
         f"<700ms: {summary['under_700ms']}/{len(rows)} | <1s: {summary['under_1s']}/{len(rows)} | "
         f"wall median {summary['wall_median']:.2f}s | errors {summary['errors']}"

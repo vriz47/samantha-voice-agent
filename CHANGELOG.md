@@ -61,3 +61,38 @@ Semua perubahan yang berarti untuk Samantha voice agent. Format mengikuti
 ---
 
 Catatan versi: entri ini belum dipublikasikan sebagai release GitHub.
+
+## [Unreleased] — 2026-10-03
+
+### Changed
+
+- `StreamPlayer` mencatat onset sink dan mengombinasikannya dengan `latency_msec`
+  untuk memperkirakan onset speaker, jadi laporan benchmark tidak lagi berhenti di
+  antrean.
+- `tools/bench_relay.py` melaporkan `speaker onset` terpisah dari `first audio`.
+
+### Added
+
+- `docs/UPDATE-2026-10-03-playback-measurement.md`.
+- `~/bin/gallery-watchdog` sekarang drove UI Gallery (tab Server lalu toggle) alih-alih
+  hanya `am start`, dan memverifikasi model benar-benar terlayani.
+
+### Fixed
+
+- **`first_drain_at` dicatat setelah `write()` selesai.** Untuk chunk besar, `write()`
+  tertahan menunggu paplay mengonsumsi audio secara realtime, jadi onset yang terukur
+  meleset sekitar 1829 ms dan terlihat seperti backlog padahal tidak ada. Dicatat
+  sebelum `write()`, selisih antre-ke-sink jadi konsisten ~1 ms.
+- Watchdog menganggap server sehat bila port listening, padahal bisa mengembalikan
+  `{"data":[]}` — port hidup tanpa model termuat.
+
+### Measured
+
+- Relay benchmark 15 giliran: first audio median 1.036 s, speaker onset median
+  **1.157 s**, wall median 6.33 s, 0 error.
+
+### Known limitation
+
+- Onset speaker masih estimasi dari `latency_msec`, bukan pengukuran akustik.
+- `Gemma3-1B-IT` dipasang langsung ke filesystem sehingga tidak ada di registry model
+  Gallery; kalau proses Gallery mati, model harus dimuat ulang manual lewat UI.

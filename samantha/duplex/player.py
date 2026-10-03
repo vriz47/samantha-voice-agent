@@ -40,12 +40,14 @@ class StreamPlayer:
         self._proc: subprocess.Popen | None = None
         self._lock = threading.Lock()
         self._rc: dict[int, object] = {}
-        self._queue: "queue.Queue[bytes | None]" = queue.Queue(maxsize=64)
+        self._queue: "queue.Queue[tuple[float, bytes] | None]" = queue.Queue(maxsize=64)
         self._writer: threading.Thread | None = None
         self._stop = threading.Event()
         self.first_audio_at: float | None = None
         self.frames_pushed = 0
         self.push_log: list[tuple[float, float]] = []
+        self.drain_log: list[tuple[float, int, float]] = []
+        self.first_drain_at: float | None = None
         self._tail = np.zeros(0, dtype=np.float32)
 
     def _resampler(self, src_rate: int):
@@ -103,11 +105,16 @@ class StreamPlayer:
             proc = self._proc
             if proc is None or proc.stdin is None:
                 return
+            queued_at, pcm = item
+            handed_off = time.monotonic()
+            if self.first_drain_at is None:
+                self.first_drain_at = handed_off
             try:
-                proc.stdin.write(item)
+                proc.stdin.write(pcm)
                 proc.stdin.flush()
             except (BrokenPipeError, ValueError, OSError):
                 return
+            self.drain_log.append((handed_off, len(pcm) // 4, queued_at))
 
     def _prepare(self, samples: np.ndarray, src_rate: int, terminator: str) -> np.ndarray:
         """Resample, level-match and add the natural pause implied by the punctuation."""
@@ -132,12 +139,13 @@ class StreamPlayer:
             return
         stereo = np.repeat(audio[:, None], 2, axis=1)
         pcm = (stereo * 32767.0).astype("<i2").tobytes()
+        now_queued = time.monotonic()
         if self.first_audio_at is None:
-            self.first_audio_at = time.monotonic()
+            self.first_audio_at = now_queued
         self.frames_pushed += len(pcm) // 4
-        self.push_log.append((time.monotonic(), len(pcm) // 4))
+        self.push_log.append((now_queued, len(pcm) // 4))
         try:
-            self._queue.put_nowait(pcm)
+            self._queue.put_nowait((now_queued, pcm))
         except queue.Full:
             return
 
